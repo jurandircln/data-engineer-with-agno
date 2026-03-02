@@ -58,7 +58,7 @@ Não estamos testando se você sabe usar ChatGPT. Estamos testando se você cons
 - [**003 — Lead Scorer**](./challenges/build-003-lead-scorer/) · Vendas / RevOps
 - [**004 — Estratégia Social Media**](./challenges/marketing-004-social/) · Marketing
 
-> Cada desafio tem seu próprio brief com contexto, dados e o que entregar.
+> Cada desafio tem seu próprio README com contexto completo, links para dados, e critérios de qualidade. Veja o [índice de challenges](./challenges/) para ajuda na escolha.
 
 ---
 
@@ -72,12 +72,12 @@ Valorizamos **inteligência no uso do tempo**, não quantidade de horas.
 
 ## Submissão
 
-Leia o [Guia de Submissão](./submission-guide.md) completo antes de começar.
+Duas opções:
 
-**Resumo:**
-- Envie para: `g4os@g4business.com`
-- Assunto: `[AI Master] Seu Nome — Challenge XXX`
-- Anexos: solução + process log (evidência de uso de IA)
+- **Pull Request** (preferida) — fork o repo, crie `submissions/seu-nome/`, abra PR. Detalhes em [CONTRIBUTING.md](./CONTRIBUTING.md).
+- **Email** — envie para `g4os@g4business.com` com assunto `[AI Master] Seu Nome — Challenge XXX`
+
+Use o [template de submissão](./templates/submission-template.md) para estruturar sua entrega. Leia o [Guia de Submissão](./submission-guide.md) para detalhes sobre o que enviar.
 
 ---
 
