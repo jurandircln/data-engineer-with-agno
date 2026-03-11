@@ -1,123 +1,163 @@
-# AI Master Challenge
+# RavenStack Churn Intelligence
 
-**O teste para quem vai transformar áreas inteiras usando IA.**
-
-O G4 está construindo um novo tipo de profissional: o **AI Master**. Uma pessoa capaz de entrar em qualquer área — vendas, suporte, marketing, operações — e usar IA generativa para resolver problemas reais de forma transformacional.
-
-Este repositório contém os desafios do processo seletivo.
+Sistema de inteligência de churn para a RavenStack — uma plataforma SaaS B2B de gerenciamento de projetos. O negócio enfrenta churn crescente e este sistema entrega respostas às causas raiz, não apenas dashboards.
 
 ---
 
-## O que é um AI Master?
+## O que o sistema entrega
 
-Um AI Master é um "one-person team" que:
-
-- **Entende o problema de negócio** antes de abrir qualquer ferramenta
-- **Usa IA generativa como alavanca**, não como muleta
-- **Entrega soluções funcionais** — não apresentações bonitas
-- **Sabe o que automatizar e o que não automatizar**
-
-Não estamos testando se você sabe usar ChatGPT. Estamos testando se você consegue **resolver problemas complexos usando IA como ferramenta estratégica**.
+- **Pipeline de dados** — raw → bronze → silver → gold usando DuckDB + Parquet
+- **Dashboard interativo** — análise exploratória de churn com filtros por segmento, período e fator de risco (Streamlit + Plotly)
+- **Agente de IA** — responde perguntas de negócio sobre churn em linguagem natural (Agno + Claude)
 
 ---
 
-## Como funciona
+## Arquitetura
 
-1. **Fork** este repositório
-2. Escolha **um desafio** da pasta [`/challenges`](./challenges/)
-3. Leia o README completo do challenge
-4. Resolva usando **qualquer ferramenta de IA** que quiser
-5. Coloque sua solução em `submissions/seu-nome/`
-6. Abra um **Pull Request** — detalhes em [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-### Regras
-
-- **Use IA.** Esperamos que você use. Queremos ver *como* você usa.
-- **Qualquer ferramenta é permitida.** Claude, ChatGPT, Gemini, Cursor, Claude Code, Copilot, scripts custom, APIs — tanto faz.
-- **Envie evidências do seu processo.** A solução sozinha não basta. Precisamos ver como você chegou lá.
-- **Sem evidência de processo = desclassificado.**
-
-### Sobre o baseline
-
-Nós já rodamos cada challenge em múltiplos modelos de IA (Claude, GPT, Gemini) para gerar respostas de referência. **Esse é o nosso baseline.** Se você simplesmente colar o brief em qualquer IA e enviar o resultado, sua resposta vai ser parecida com algo que já temos.
-
-Parecido com o baseline não é suficiente. Esperamos que a sua entrega **supere substancialmente** o que a IA produz sozinha — em profundidade de análise, em julgamento, em qualidade de execução, ou em criatividade da solução.
-
-O valor de um AI Master não é saber pedir pra IA. É saber o que pedir, quando desconfiar, o que ajustar, e o que só um humano com contexto consegue fazer.
-
-### O que NÃO estamos avaliando
-
-- Conhecimento de uma linguagem de programação específica
-- Memorização de frameworks ou metodologias
-- Experiência prévia no setor de educação
-- Se você usou a ferramenta X ou Y
-
-### O que estamos avaliando
-
-- Você entendeu o problema antes de sair executando?
-- Usou IA de forma inteligente ou só deu copy-paste?
-- O resultado resolve o problema de verdade?
-- Alguém consegue entender e agir com base no que você entregou?
+```
+data/raw/*.csv
+      │
+      ▼
+┌─────────────┐
+│   BRONZE    │  pipeline/bronze/run_bronze.py
+│  (Parquet)  │  Ingestão direta, sem transformação
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│   SILVER    │  pipeline/silver/run_silver.py
+│  (Parquet)  │  Limpeza, tipagem, deduplicação, enriquecimento
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│    GOLD     │  pipeline/gold/run_gold.py
+│  (Parquet)  │  Métricas agregadas, risk scores, drivers de churn
+└──────┬──────┘
+       │
+       ├──────────────────────┐
+       ▼                      ▼
+┌─────────────┐      ┌──────────────────┐
+│  DASHBOARD  │      │     AGENTE       │
+│  Streamlit  │      │  Agno + Claude   │
+│ :8501       │      │  (via terminal)  │
+└─────────────┘      └──────────────────┘
+```
 
 ---
 
-## Desafios disponíveis
+## Como rodar
 
-- [**001 — Diagnóstico de Churn**](./challenges/data-001-churn/) · Dados / Analytics
-- [**002 — Redesign de Suporte**](./challenges/process-002-support/) · Operações / CX
-- [**003 — Lead Scorer**](./challenges/build-003-lead-scorer/) · Vendas / RevOps
-- [**004 — Estratégia Social Media**](./challenges/marketing-004-social/) · Marketing
+### Docker (recomendado)
 
-> Cada desafio tem seu próprio README com contexto completo, links para dados, e critérios de qualidade. Veja o [índice de challenges](./challenges/) para ajuda na escolha.
+**Pré-requisito:** Docker Desktop instalado e `ANTHROPIC_API_KEY` disponível.
 
----
+```bash
+# Clone o repositório
+git clone <url-do-repo>
+cd ai-master-challenge
 
-## Time budget
+# Defina sua chave da API (ou coloque em um arquivo .env)
+export ANTHROPIC_API_KEY=sk-ant-...
 
-Cada desafio foi projetado para ser resolvido em **4 a 6 horas**. Não há cronômetro — mas soluções que levaram 40 horas não recebem pontos extras por isso.
+# Suba o sistema
+docker compose up
+```
 
-Valorizamos **inteligência no uso do tempo**, não quantidade de horas.
+Na primeira execução, o pipeline roda automaticamente e gera os parquets em `./data/`. Execuções subsequentes reutilizam os parquets existentes sem rodar o pipeline novamente.
 
----
+Dashboard disponível em: **http://localhost:8501**
 
-## Submissão
+### Local (uv)
 
-A submissão é feita **exclusivamente via Pull Request**. Isso faz parte do teste.
+**Pré-requisito:** [uv](https://docs.astral.sh/uv/) instalado e Python 3.12+.
 
-1. Fork → branch `submission/seu-nome` → pasta `submissions/seu-nome/`
-2. Use o [template de submissão](./templates/submission-template.md) para estruturar sua entrega
-3. Abra o PR seguindo as instruções em [CONTRIBUTING.md](./CONTRIBUTING.md)
-4. Leia o [Guia de Submissão](./submission-guide.md) para detalhes sobre o que enviar
+```bash
+# Clone e instale dependências
+git clone <url-do-repo>
+cd ai-master-challenge
+uv sync
 
-> Se você não sabe abrir um Pull Request, esse é um bom momento pra aprender. Um AI Master resolve esse tipo de problema em 10 minutos.
+# Configure a chave da API
+cp .env.example .env   # edite com sua ANTHROPIC_API_KEY
 
----
+# Execute o pipeline
+uv run python pipeline/bronze/run_bronze.py
+uv run python pipeline/silver/run_silver.py
+uv run python pipeline/gold/run_gold.py
 
-## FAQ
+# Suba o dashboard
+uv run streamlit run app/dashboard/main.py
 
-**Posso fazer mais de um desafio?**
-Pode, mas preferimos um bem feito do que dois superficiais.
-
-**Posso usar IA pra tudo?**
-Sim. O ponto não é fazer sem IA. É usar IA melhor do que a média.
-
-**Se eu só colar o problema no ChatGPT e enviar a resposta?**
-Nós já fizemos isso — com vários modelos. Temos as respostas. Se a sua for parecida, você não agregou nada. Próximo.
-
-**Quanto tempo tenho?**
-Recomendamos 4-6 horas. Envie quando estiver pronto — não há deadline fixo para o desafio (mas vagas são limitadas).
-
-**Preciso saber programar?**
-Não necessariamente. Mas um AI Master que consegue "vibe code" uma solução funcional tem vantagem sobre um que só escreve documento.
+# (opcional) Inicie o agente conversacional
+uv run python main.py
+```
 
 ---
 
-## Sobre o G4
+## Variáveis de ambiente
 
-O [G4](https://g4educacao.com) é a maior plataforma de educação executiva do Brasil. Formamos líderes e gestores com metodologias práticas baseadas em empresas de alto crescimento.
-
-Estamos construindo o futuro do trabalho com IA — e precisamos de pessoas que construam junto.
+| Variável | Obrigatório | Descrição |
+|----------|-------------|-----------|
+| `ANTHROPIC_API_KEY` | Sim | Chave da API Anthropic para o agente de IA |
 
 ---
 
-*Tem dúvidas? Abra uma [issue](../../issues).*
+## Estrutura do projeto
+
+```
+ai-master-challenge/
+├── Dockerfile              # Imagem Docker com pipeline + Streamlit
+├── docker-compose.yml      # Orquestração com volume para persistir dados
+├── entrypoint.sh           # Roda pipeline se necessário, depois sobe dashboard
+├── pyproject.toml          # Dependências (gerenciadas com uv)
+├── main.py                 # Entrypoint do agente conversacional
+├── data/
+│   ├── raw/                # CSVs originais — imutáveis
+│   ├── bronze/             # Parquet pós-ingestão
+│   ├── silver/             # Parquet pós-transformação (modelo dimensional)
+│   └── gold/               # Parquet com métricas agregadas e risk scores
+├── pipeline/
+│   ├── bronze/run_bronze.py
+│   ├── silver/run_silver.py
+│   └── gold/run_gold.py
+├── app/
+│   ├── dashboard/          # Streamlit: main.py + queries.py
+│   └── agent/              # Agno: agent.py + tools.py
+└── docs/
+    ├── 01-business/        # Regras de negócio, KPIs, playbook de retenção
+    ├── 02-product/         # Casos de uso, deliverables, playbook CS
+    └── 03-engineering/     # Arquitetura, modelo de dados, ADRs
+```
+
+---
+
+## As 3 perguntas diagnósticas
+
+O sistema é construído para responder estas perguntas para qualquer período:
+
+**P1 — O que está causando o churn?**
+Causa raiz identificada via cruzamento de `churn_events` × `feature_usage` × `support_tickets` × `subscriptions`. Cada causa com percentual do total de churns.
+
+**P2 — Quais segmentos estão mais em risco?**
+Segmentação por `industry`, `plan_tier`, `country` e `referral_source`. Contas específicas com risk score mais alto (nome + MRR em risco).
+
+**P3 — O que a empresa deveria fazer?**
+2–3 ações concretas com público-alvo definido e impacto estimado em MRR ou redução de churn rate.
+
+Use o agente para fazer estas perguntas diretamente em linguagem natural.
+
+---
+
+## Stack
+
+| Tecnologia | Versão | Papel |
+|------------|--------|-------|
+| Python | 3.12 | Runtime |
+| DuckDB | 1.5+ | Motor de queries SQL analíticas |
+| Parquet | — | Formato de armazenamento colunar |
+| Streamlit | 1.55+ | Dashboard interativo |
+| Plotly | 6.6+ | Visualizações interativas |
+| Agno | 1.4+ | Framework de agentes de IA |
+| Claude (Anthropic) | claude-sonnet-4-6 | LLM do agente |
+| uv | latest | Gerenciamento de dependências e execução |
